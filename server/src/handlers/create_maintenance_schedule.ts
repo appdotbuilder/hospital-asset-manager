@@ -1,18 +1,36 @@
 
+import { db } from '../db';
+import { maintenanceSchedulesTable, assetsTable } from '../db/schema';
 import { type CreateMaintenanceScheduleInput, type MaintenanceSchedule } from '../schema';
+import { eq } from 'drizzle-orm';
 
-export async function createMaintenanceSchedule(input: CreateMaintenanceScheduleInput): Promise<MaintenanceSchedule> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is creating a new maintenance schedule entry and persisting it in the database.
-    // Admin-only functionality: Only admin users should be able to schedule maintenance.
-    return Promise.resolve({
-        id: 0, // Placeholder ID
+export const createMaintenanceSchedule = async (input: CreateMaintenanceScheduleInput): Promise<MaintenanceSchedule> => {
+  try {
+    // Verify that the referenced asset exists
+    const existingAsset = await db.select()
+      .from(assetsTable)
+      .where(eq(assetsTable.id, input.asset_id))
+      .execute();
+
+    if (existingAsset.length === 0) {
+      throw new Error(`Asset with id ${input.asset_id} not found`);
+    }
+
+    // Insert maintenance schedule record
+    const result = await db.insert(maintenanceSchedulesTable)
+      .values({
         asset_id: input.asset_id,
         scheduled_date: input.scheduled_date,
         maintenance_type: input.maintenance_type,
-        status: 'scheduled',
         notes: input.notes,
-        completed_date: null,
-        created_at: new Date()
-    } as MaintenanceSchedule);
-}
+        status: 'scheduled' // Default status as defined in schema
+      })
+      .returning()
+      .execute();
+
+    return result[0];
+  } catch (error) {
+    console.error('Maintenance schedule creation failed:', error);
+    throw error;
+  }
+};

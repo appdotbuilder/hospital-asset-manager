@@ -1,9 +1,25 @@
 
+import { db } from '../db';
+import { repairRequestsTable } from '../db/schema';
 import { type RepairRequest } from '../schema';
+import { desc } from 'drizzle-orm';
 
-export async function getAllRepairRequests(): Promise<RepairRequest[]> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching all repair requests from the database.
-    // Admin-only functionality: Only admin users should be able to view all repair requests.
-    return Promise.resolve([]);
-}
+export const getAllRepairRequests = async (): Promise<RepairRequest[]> => {
+  try {
+    const results = await db.select()
+      .from(repairRequestsTable)
+      .orderBy(desc(repairRequestsTable.created_at))
+      .execute();
+
+    return results.map(request => ({
+      ...request,
+      // Convert Date objects to ensure proper type inference
+      requested_date: request.requested_date,
+      completed_date: request.completed_date,
+      created_at: request.created_at
+    }));
+  } catch (error) {
+    console.error('Failed to fetch all repair requests:', error);
+    throw error;
+  }
+};

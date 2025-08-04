@@ -1,9 +1,17 @@
 
+import { db } from '../db';
+import { usersTable } from '../db/schema';
 import { type User } from '../schema';
 
-export async function getUsers(): Promise<User[]> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching all users from the database.
-    // Admin-only functionality: Only admin users should be able to view all users.
-    return Promise.resolve([]);
-}
+export const getUsers = async (): Promise<User[]> => {
+  try {
+    const result = await db.select()
+      .from(usersTable)
+      .execute();
+
+    return result;
+  } catch (error) {
+    console.error('Get users failed:', error);
+    throw error;
+  }
+};

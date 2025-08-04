@@ -1,9 +1,19 @@
 
+import { db } from '../db';
+import { assetsTable } from '../db/schema';
+import { eq } from 'drizzle-orm';
 import { type GetAssetsByDepartmentInput, type Asset } from '../schema';
 
-export async function getAssetsByDepartment(input: GetAssetsByDepartmentInput): Promise<Asset[]> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching all assets belonging to a specific department.
-    // Regular users can only view assets from their own department.
-    return Promise.resolve([]);
-}
+export const getAssetsByDepartment = async (input: GetAssetsByDepartmentInput): Promise<Asset[]> => {
+  try {
+    const results = await db.select()
+      .from(assetsTable)
+      .where(eq(assetsTable.department, input.department))
+      .execute();
+
+    return results;
+  } catch (error) {
+    console.error('Get assets by department failed:', error);
+    throw error;
+  }
+};

@@ -1,9 +1,23 @@
 
+import { db } from '../db';
+import { maintenanceSchedulesTable } from '../db/schema';
 import { type MaintenanceSchedule } from '../schema';
 
-export async function getMaintenanceSchedules(): Promise<MaintenanceSchedule[]> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching all maintenance schedules from the database.
-    // Admin users can view all schedules, regular users can view schedules for their assets/department.
-    return Promise.resolve([]);
-}
+export const getMaintenanceSchedules = async (): Promise<MaintenanceSchedule[]> => {
+  try {
+    const results = await db.select()
+      .from(maintenanceSchedulesTable)
+      .execute();
+
+    return results.map(schedule => ({
+      ...schedule,
+      // All date fields are already Date objects from timestamp columns
+      scheduled_date: schedule.scheduled_date,
+      completed_date: schedule.completed_date,
+      created_at: schedule.created_at
+    }));
+  } catch (error) {
+    console.error('Failed to fetch maintenance schedules:', error);
+    throw error;
+  }
+};
